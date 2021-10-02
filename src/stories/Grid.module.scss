@@ -1,0 +1,39 @@
+.root {
+  width: min-content;
+  //background-color: aliceblue;
+  font-family: sans-serif;
+  display: grid;
+  grid-template: ". . . . . . . . ."
+                 ". . . . . . . . ."
+                 ". . . . . . . . ."
+                 ". . . . . . . . ."
+                 ". . . . . . . . ."
+                 ". . . . . . . . ."
+                 ". . . . . . . . ."
+                 ". . . . . . . . ."
+                 ". . . . . . . . .";
+  grid-template-columns: min-content min-content min-content;
+  grid-template-rows: min-content min-content min-content;
+
+  & > div {
+    border: 1px solid black;
+  }
+
+  & > div:nth-child(n):nth-child(-n+9) {
+    border-top-width: 4px;
+  }
+
+  & > div:nth-child(n+73):nth-child(-n+81),
+  & > div:nth-child(n+19):nth-child(-n+27),
+  & > div:nth-child(n+46):nth-child(-n+54) {
+    border-bottom-width: 4px;
+  }
+
+  & > div:nth-child(3n) {
+    border-right-width: 4px;
+  }
+
+  & > div:nth-child(9n+1) {
+    border-left-width: 4px;
+  }
+}
