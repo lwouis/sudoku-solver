@@ -3,6 +3,7 @@
   width: min-content;
   //background-color: aliceblue;
   font-family: sans-serif;
+  font-size: 11px;
 }
 
 .number {
@@ -15,7 +16,7 @@
   align-items: center;
 
   & > div {
-    font-size: 64px;
+    font-size: 40px;
   }
 }
 
@@ -29,6 +30,6 @@
   grid-template-rows: min-content min-content min-content;
 
   & > div {
-    padding: 4px 9px;
+    padding: 2px 5px;
   }
 }

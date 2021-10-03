@@ -12,21 +12,17 @@ export const Grid: FC<GridProps> = ({internalGrid}) => {
   const [internalGrid$, setInternalGrid$] = useState<InternalGrid>(internalGrid)
   const [hoveredColRow, setHoveredColRow] = useState<[number, number]>()
 
-  // console.log('render')
-
   for (let i = 1; i <= 9; i++) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    useHotkeys(String(i), () => {
-      if (hoveredColRow) {
-        // console.log('setInternalGrid$')
+    useHotkeys(String(i), (event) => {
+      if (hoveredColRow && !event.repeat) {
         setInternalGrid$(internalGrid$.setNumber(hoveredColRow[0], hoveredColRow[1], i))
         forceRender(!render)
       }
     }, [hoveredColRow, internalGrid$, forceRender])
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    useHotkeys(`shift+${i}`, () => {
-      if (hoveredColRow) {
-        // console.log('setInternalGrid$')
+    useHotkeys(`shift+${i}`, (event) => {
+      if (hoveredColRow && !event.repeat) {
         setInternalGrid$(internalGrid$.setCandidate(hoveredColRow[0], hoveredColRow[1], i))
         forceRender(!render)
       }
@@ -45,35 +41,37 @@ export const Grid: FC<GridProps> = ({internalGrid}) => {
 
   return (
     <div className={styles.root}>
-      {internalGrid$.cells.flatMap((r, row) => {
-        return r.map((c, col) => {
-          return (
-            <div
-              key={`${col}${row}`}
-              onMouseEnter={() => setHoveredColRow([col + 1, row + 1])}
-              onMouseLeave={() => setHoveredColRow(undefined)}
-              style={{backgroundColor: backgroundColor(col + 1, row + 1)}}>
-              <Cell {...c}/>
-            </div>
-          )
-        })
+      {internalGrid$.cells.map((c, i) => {
+        const col = i % 9 + 1
+        const row = Math.floor(i / 9 + 1)
+        return (
+          <div
+            key={`${col}${row}`}
+            onMouseEnter={() => setHoveredColRow([col, row])}
+            onMouseLeave={() => setHoveredColRow(undefined)}
+            style={{backgroundColor: backgroundColor(col, row)}}>
+            <Cell {...c}/>
+          </div>
+        )
       })}
     </div>
   )
 }
 
 export class InternalGrid {
-  constructor(public cells: CellProps[][] = Array.from({length: 9}, () =>
-    Array.from({length: 9}, (_, col) => {
-      return {number: col + 1, candidates: []}
-    }),
-  )) {}
+  constructor(public cells: CellProps[]) {}
+
+  static newFromNotation(notation: string): InternalGrid {
+    notation = notation.replaceAll('\n', '')
+    return new InternalGrid(notation.split('').map(c => ({number: c === '.' ? undefined : Number(c), candidates: []})))
+  }
 
   setNumber(col: number, row: number, number: number): InternalGrid {
     const cell = this.get(col, row)
     cell.number = number
     return this
   }
+
   setCandidate(col: number, row: number, candidate: number): InternalGrid {
     const cell = this.get(col, row)
     cell.number = undefined
@@ -86,10 +84,9 @@ export class InternalGrid {
   }
 
   private get(col: number, row: number): CellProps {
-    return this.cells[row - 1][col - 1]
+    return this.cells[(col - 1) + (row - 1) * 9]
   }
 }
-
 
 
 
