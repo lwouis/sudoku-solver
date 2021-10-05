@@ -4,13 +4,15 @@ import styles from './Cell.module.scss'
 export interface CellProps {
   number?: number
   candidates: number[]
+  isInitial?: boolean
+  isDiff?: boolean
 }
 
-export const Cell: FC<CellProps> = ({number, candidates}) => {
+export const Cell: FC<CellProps> = ({number, candidates, isInitial}) => {
   return (
     <div className={styles.root}>
       {number && (
-        <div className={styles.number}>
+        <div className={styles.number + (isInitial ? ' ' + styles.initial : '')}>
           <div>{number}</div>
         </div>
       )}
