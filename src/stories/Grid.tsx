@@ -7,6 +7,8 @@ interface GridProps {
   internalGrid: InternalGrid
 }
 
+const shortcuts: [(i: number) => string, 'setNumber' | 'setCandidate'][] = [[(i) => `${i}`, 'setNumber'], [(i) => `shift+${i}`, 'setCandidate']]
+
 export const Grid: FC<GridProps> = ({internalGrid}) => {
   const [render, forceRender] = useState(false)
   const [internalGrid$, setInternalGrid$] = useState<InternalGrid>(internalGrid)
@@ -14,20 +16,14 @@ export const Grid: FC<GridProps> = ({internalGrid}) => {
   const [hoveredColRow, setHoveredColRow] = useState<[number, number]>()
 
   for (let i = 1; i <= 9; i++) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useHotkeys(String(i), (event) => {
-      if (hoveredColRow && !event.repeat) {
-        setInternalGrid$(internalGrid$.setNumber(hoveredColRow[0], hoveredColRow[1], i))
-        forceRender(!render)
-      }
-    }, [hoveredColRow, internalGrid$, forceRender])
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useHotkeys(`shift+${i}`, (event) => {
-      if (hoveredColRow && !event.repeat) {
-        setInternalGrid$(internalGrid$.setCandidate(hoveredColRow[0], hoveredColRow[1], i))
-        forceRender(!render)
-      }
-    }, [hoveredColRow, internalGrid$, forceRender])
+    for (const shortcut of shortcuts)
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useHotkeys(shortcut[0](i), (event) => {
+        if (hoveredColRow && !event.repeat && !internalGrid$.get(hoveredColRow[0], hoveredColRow[1]).isInitial) {
+          setInternalGrid$(internalGrid$[shortcut[1]](hoveredColRow[0], hoveredColRow[1], i))
+          forceRender(!render)
+        }
+      }, [hoveredColRow, internalGrid$, forceRender])
   }
 
   function backgroundColor(col: number, row: number, cell: CellProps) {
@@ -287,7 +283,7 @@ export class InternalGrid {
     }
   }
 
-  private get(col: number, row: number): CellProps {
+  get(col: number, row: number): CellProps {
     return this.cells[(col - 1) + (row - 1) * 9]
   }
 }
