@@ -69,9 +69,10 @@ export const Grid: FC<GridProps> = ({internalGrid}) => {
 
 export type SolvingStep =
   'fillCandidatesForAllCells'
-  | 'fillSoloCandidatesForAllCells'
-  | 'fillOnlyPossibleNumberInLines'
-  | 'removeImpossibleCandidates'
+  | 'singleCandidateInCell'
+  | 'singleCandidateForNumberInGroup'
+  | 'candidatesTuplesRemoveOtherCandidates'
+  | 'alignedCandidatesInBoxRemoveCandidatesOnLine'
 
 export class InternalGrid {
   constructor(public cells: CellProps[]) {}
@@ -148,7 +149,7 @@ export class InternalGrid {
     }
   }
 
-  fillSoloCandidatesForAllCells() {
+  singleCandidateInCell() {
     for (let row = 1; row <= 9; row++) {
       for (let col = 1; col <= 9; col++) {
         const cell = this.get(col, row)
@@ -159,8 +160,8 @@ export class InternalGrid {
     }
   }
 
-  fillOnlyPossibleNumberInLines() {
-    for (const type of ['row', 'col']) {
+  singleCandidateForNumberInGroup() {
+    for (const type of ['row', 'col', 'box']) {
       for (let i = 1; i <= 9; i++) {
         const occurrences = new Map<number, CellProps[]>()
         for (let j = 1; j <= 9; j++) {
@@ -176,7 +177,7 @@ export class InternalGrid {
           }
         }
         for (const [k, v] of occurrences.entries()) {
-          if (v.length === 1) {
+          if (v.length === 1 && v[0].number === undefined) {
             v[0].number = k
           }
         }
@@ -184,34 +185,75 @@ export class InternalGrid {
     }
   }
 
-  removeImpossibleCandidates() {
+  candidatesTuplesRemoveOtherCandidates() {
     for (const type of ['row', 'col', 'box']) {
       for (let i = 1; i <= 9; i++) {
-        const tuples = new Map<string, CellProps[]>()
+        const candidatesMap = new Map<number, CellProps[]>()
+        const partialTuplesMap = new Map<string, CellProps[]>()
+        const fullTuplesMap = new Map<string, CellProps[]>()
+        const allCells: CellProps[] = []
         for (let j = 1; j <= 9; j++) {
           const colRow = InternalGrid.colRowForType(type, j, i)
           const cell = this.get(colRow[0], colRow[1])
           if (cell.number === undefined && cell.candidates.length > 0) {
-            const k = cell.candidates.sort((a, b) => a - b).join('')
-            const v = tuples.get(k)
-            if (v) {
-              v.push(cell)
-            } else {
-              tuples.set(k, [cell])
+            allCells.push(cell)
+            const candidates = cell.candidates.sort((a, b) => a - b)
+            for (const candidate of candidates) {
+              setOrInit(candidatesMap, candidate, cell)
             }
+            for (const tuple of allPossibleTuples(candidates)) {
+              setOrInit(partialTuplesMap, tuple.join(''), cell)
+            }
+            setOrInit(fullTuplesMap, candidates.join(''), cell)
           }
         }
-        for (const [k, cells] of tuples.entries()) {
+        for (const [k, cells] of fullTuplesMap.entries()) {
           if (k.length > 1 && k.length === cells.length) {
-            const candidates = k.split('').map(c => Number(c))
-            for (const cell of Array.from(tuples.values()).flat()) {
-              if (!cells.includes(cell)) {
-                cell.candidates = cell.candidates.filter(c => !candidates.includes(c))
+            this.removeCandidates(k, allCells, cells)
+          }
+        }
+        for (const [k, cells] of partialTuplesMap.entries()) {
+          if (k.length === cells.length && k.split('').every(candidate => sameArrays(candidatesMap.get(Number(candidate)), cells))) {
+            this.removeCandidates(k, allCells, cells)
+          }
+        }
+      }
+    }
+  }
+
+  alignedCandidatesInBoxRemoveCandidatesOnLine() {
+    for (let i = 1; i <= 9; i++) {
+      const candidatesColumns = new Map<number, number[]>()
+      const candidatesRows = new Map<number, number[]>()
+      for (let j = 1; j <= 9; j++) {
+        const colRow = InternalGrid.colRowForType('box', j, i)
+        const cell = this.get(colRow[0], colRow[1])
+        if (cell.number === undefined && cell.candidates.length > 0) {
+          cell.candidates.forEach(candidate => {
+            setOrInit(candidatesColumns, candidate, colRow[0])
+            setOrInit(candidatesRows, candidate, colRow[1])
+          })
+        }
+      }
+      const tuples: [Map<number, number[]>, string][] = [[candidatesColumns, 'col'], [candidatesRows, 'row']]
+      tuples.forEach(([map, type], t) => {
+        for (const [candidate, lines] of map.entries()) {
+          if (new Set(lines).size === 1) {
+            const otherMap = new Set(tuples[t === 0 ? 1 : 0][0].get(candidate))
+            if (otherMap && otherMap.size > 1) {
+              for (let j = 1; j <= 9; j++) {
+                if (!otherMap.has(j)) {
+                  const colRow = InternalGrid.colRowForType(type === 'col' ? 'row' : 'col', lines[0], j)
+                  const cell = this.get(colRow[0], colRow[1])
+                  if (cell.number === undefined && cell.candidates.length > 0) {
+                    cell.candidates = cell.candidates.filter(c => c !== candidate)
+                  }
+                }
               }
             }
           }
         }
-      }
+      })
     }
   }
 
@@ -236,7 +278,49 @@ export class InternalGrid {
     return c1.length === c2.length && c1.every((value, index) => value === c2[index])
   }
 
+  private removeCandidates(k: string, allCells: CellProps[], cells: CellProps[]): void {
+    const candidates = k.split('').map(c => Number(c))
+    for (const cell of allCells) {
+      if (!cells.includes(cell)) {
+        cell.candidates = cell.candidates.filter(c => !candidates.includes(c))
+      }
+    }
+  }
+
   private get(col: number, row: number): CellProps {
     return this.cells[(col - 1) + (row - 1) * 9]
+  }
+}
+
+function allPossibleTuples(array: number[]): number[][] {
+  return Array.from(Array(2 ** array.length - 1).keys())
+    .map((n) =>
+      ((n + 1) >>> 0)
+        .toString(2)
+        .split('')
+        .reverse()
+        .map((n, i) => (+n ? array[i] : 0))
+        .filter(Boolean),
+    )
+    .filter(n => n.length > 1)
+    .sort((a, b) => (a.length > b.length ? -1 : 1))
+}
+
+function sameArrays<T>(a1?: T[], a2?: T[]): boolean {
+  if (a1 === undefined && a2 === undefined) {
+    return true
+  }
+  if (a1 === undefined || a2 === undefined) {
+    return false
+  }
+  return a1.length === a2.length && a1.every((value, index) => value === a2[index])
+}
+
+function setOrInit<K, V>(map: Map<K, V[]>, key: K, value: V) {
+  const v = map.get(key)
+  if (v) {
+    v.push(value)
+  } else {
+    map.set(key, [value])
   }
 }

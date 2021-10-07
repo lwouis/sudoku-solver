@@ -3,23 +3,20 @@ import { Grid, InternalGrid, SolvingStep } from './stories/Grid'
 import styles from './App.module.scss'
 
 const STEPS: SolvingStep[] = [
-  // for each cell, fill candidates by excluding numbers in lines/box
-  'fillCandidatesForAllCells',
   // for each cell, if there is only one candidate, it is filled in
-  'fillSoloCandidatesForAllCells',
+  'singleCandidateInCell',
   // for each line, if a candidate is the only one of its number, it is filled in
-  'fillOnlyPossibleNumberInLines',
+  'singleCandidateForNumberInGroup',
   // for each line/box, if there are same candidates tuples, remove their candidates from other cells
-  'removeImpossibleCandidates',
-
-  // pointing pairs/triples (https://www.sudokuwiki.org/PuzImages/PP1.png)
-  // box line reduction (https://www.sudokuwiki.org/PuzImages/BLR1.png)
-
-  // great documentation on techniques: https://www.sudokuwiki.org/sudoku.htm
-
-  // double pointing pairs (https://www.kristanix.com/sudokuepic/4blockblock.png)
-  // for each line, if there are candidate tuples with candidates not appearing elsewhere, remove their other candidates
+  // for each line/box, if there are candidate tuples with candidates not appearing elsewhere, remove their other candidates
   // (https://www.kristanix.com/sudokuepic/6hiddensubset.png)
+  'candidatesTuplesRemoveOtherCandidates',
+  // pointing pairs/triples (https://www.sudokuwiki.org/PuzImages/PP1.png)
+  'alignedCandidatesInBoxRemoveCandidatesOnLine',
+
+  // great documentation on techniques: https://www.sudokuwiki.org/Strategy_Families
+  // box line reduction (https://www.sudokuwiki.org/PuzImages/BLR1.png)
+  // double pointing pairs (https://www.kristanix.com/sudokuepic/4blockblock.png)
   // x-wing (https://www.kristanix.com/sudokuepic/7xwing.png)
   // y-wing (https://www.sudokuwiki.org/PuzImages/YWing1.png)
   // swordfish. Very complex... (https://www.kristanix.com/sudokuepic/sudoku-solving-techniques.php)
@@ -36,9 +33,8 @@ export const App: FC = () => {
     let nextStep = 0
     const stepByStepGrids: [string, InternalGrid][] = [['Initial grid', internalGrid]]
     while (remainingStepsWithoutChange > 0) {
-      console.log(remainingStepsWithoutChange)
       const oldGrid = stepByStepGrids[stepByStepGrids.length - 1][1]
-      const newGrid = oldGrid.clone().solveWithStep(STEPS[nextStep])
+      const newGrid = oldGrid.clone().solveWithStep(STEPS[nextStep]).solveWithStep('fillCandidatesForAllCells')
       const same = InternalGrid.colorDiff(oldGrid, newGrid)
       if (!same) {
         stepByStepGrids.push([STEPS[nextStep], newGrid])
@@ -62,7 +58,7 @@ export const App: FC = () => {
       <div className={styles.right}>
         {stepByStep?.map(([step, g], i) => (
           <div key={i} style={{zoom: 0.7, marginBottom: '20px'}}>
-            <strong>{i}. {step}</strong>
+            <strong style={{textTransform: 'capitalize'}}>{i}. {step.replace(/([a-z0-9])([A-Z])/g, '$1 $2')}</strong>
             <Grid internalGrid={g}/>
           </div>
         ))}
