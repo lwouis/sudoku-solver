@@ -3,8 +3,6 @@ import { Grid, InternalGrid, SolvingStep } from './stories/Grid'
 import styles from './App.module.scss'
 
 const STEPS: SolvingStep[] = [
-  // for each cell, if there is only one candidate, it is filled in
-  'singleCandidateInCell',
   // for each line, if a candidate is the only one of its number, it is filled in
   'singleCandidateForNumberInGroup',
   // for each line/box, if there are same candidates tuples, remove their candidates from other cells
@@ -31,15 +29,34 @@ export const App: FC = () => {
   function solve() {
     let remainingStepsWithoutChange = STEPS.length
     let nextStep = 0
-    const stepByStepGrids: [string, InternalGrid][] = [['Initial grid', internalGrid]]
+    const stepByStepGrids: [string, InternalGrid][] = [
+      ['Initial grid', internalGrid],
+      ['fillNumberOrCandidatesForAllCells', internalGrid.clone().solveWithStep('fillNumberOrCandidatesForAllCells')],
+    ]
     while (remainingStepsWithoutChange > 0) {
       const oldGrid = stepByStepGrids[stepByStepGrids.length - 1][1]
-      const newGrid = oldGrid.clone().solveWithStep(STEPS[nextStep]).solveWithStep('fillCandidatesForAllCells')
-      const same = InternalGrid.colorDiff(oldGrid, newGrid)
+      let newGrid = oldGrid.clone().solveWithStep(STEPS[nextStep])
+      let same = InternalGrid.colorDiff(oldGrid, newGrid)
+      console.log(same, remainingStepsWithoutChange, STEPS[nextStep])
+      remainingStepsWithoutChange = same ? remainingStepsWithoutChange - 1 : STEPS.length
       if (!same) {
         stepByStepGrids.push([STEPS[nextStep], newGrid])
+        const originalNewGrid = newGrid
+        let cleanedGrid
+        let wasCleaned = false
+        do {
+          cleanedGrid = newGrid.clone().solveWithStep('fillNumberOrCandidatesForAllCells')
+          same = InternalGrid.colorDiff(newGrid, cleanedGrid)
+          if (!same) {
+            newGrid = cleanedGrid
+            wasCleaned = true
+          }
+        } while (!same)
+        if (wasCleaned) {
+          InternalGrid.colorDiff(originalNewGrid, cleanedGrid)
+          stepByStepGrids.push(['fillNumberOrCandidatesForAllCells', cleanedGrid])
+        }
       }
-      remainingStepsWithoutChange = same ? remainingStepsWithoutChange - 1 : STEPS.length
       nextStep = (nextStep + 1) % STEPS.length
     }
     setStepByStep([...stepByStepGrids])

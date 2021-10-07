@@ -7,7 +7,7 @@ interface GridProps {
   internalGrid: InternalGrid
 }
 
-const shortcuts: [(i: number) => string, 'setNumber' | 'setCandidate'][] = [[(i) => `${i}`, 'setNumber'], [(i) => `shift+${i}`, 'setCandidate']]
+const shortcuts: [(i: number) => string, 'setNumber' | 'toggleCandidate'][] = [[(i) => `${i}`, 'setNumber'], [(i) => `shift+${i}`, 'toggleCandidate']]
 
 export const Grid: FC<GridProps> = ({internalGrid}) => {
   const [render, forceRender] = useState(false)
@@ -64,8 +64,7 @@ export const Grid: FC<GridProps> = ({internalGrid}) => {
 }
 
 export type SolvingStep =
-  'fillCandidatesForAllCells'
-  | 'singleCandidateInCell'
+  'fillNumberOrCandidatesForAllCells'
   | 'singleCandidateForNumberInGroup'
   | 'candidatesTuplesRemoveOtherCandidates'
   | 'alignedCandidatesInBoxRemoveCandidatesOnLine'
@@ -104,7 +103,7 @@ export class InternalGrid {
     return this
   }
 
-  setCandidate(col: number, row: number, candidate: number): InternalGrid {
+  toggleCandidate(col: number, row: number, candidate: number): InternalGrid {
     const cell = this.get(col, row)
     cell.number = undefined
     if (cell.candidates.includes(candidate)) {
@@ -120,38 +119,35 @@ export class InternalGrid {
     return this
   }
 
-  fillCandidatesForAllCells() {
+  fillNumberOrCandidatesForAllCells(): void {
     for (let row = 1; row <= 9; row++) {
       for (let col = 1; col <= 9; col++) {
-        const cell = this.get(col, row)
-        if (cell.number === undefined) {
-          let candidates = cell.candidates.length > 0 ? cell.candidates : Array.from({length: 9}, (_, i) => i + 1)
-          for (let c = 1; c <= 9; c++) {
-            candidates = candidates.filter(n => n !== this.get(c, row).number)
-          }
-          for (let r = 1; r <= 9; r++) {
-            candidates = candidates.filter(n => n !== this.get(col, r).number)
-          }
-          const boxFirstCol = Math.ceil(col / 3) * 3 - 2
-          const boxFirstRow = Math.ceil(row / 3) * 3 - 2
-          for (let r = boxFirstRow; r <= boxFirstRow + 2; r++) {
-            for (let c = boxFirstCol; c <= boxFirstCol + 2; c++) {
-              candidates = candidates.filter(n => n !== this.get(c, r).number)
-            }
-          }
-          cell.candidates = candidates
-        }
+        this.fillNumberOrCandidatesForCell(col, row)
       }
     }
   }
 
-  singleCandidateInCell() {
-    for (let row = 1; row <= 9; row++) {
-      for (let col = 1; col <= 9; col++) {
-        const cell = this.get(col, row)
-        if (!cell.number && cell.candidates.length === 1) {
-          cell.number = cell.candidates[0]
+  fillNumberOrCandidatesForCell(col: number, row: number): void {
+    const cell = this.get(col, row)
+    if (cell.number === undefined) {
+      let candidates = cell.candidates.length > 0 ? cell.candidates : Array.from({length: 9}, (_, i) => i + 1)
+      for (let c = 1; c <= 9; c++) {
+        candidates = candidates.filter(n => n !== this.get(c, row).number)
+      }
+      for (let r = 1; r <= 9; r++) {
+        candidates = candidates.filter(n => n !== this.get(col, r).number)
+      }
+      const boxFirstCol = Math.ceil(col / 3) * 3 - 2
+      const boxFirstRow = Math.ceil(row / 3) * 3 - 2
+      for (let r = boxFirstRow; r <= boxFirstRow + 2; r++) {
+        for (let c = boxFirstCol; c <= boxFirstCol + 2; c++) {
+          candidates = candidates.filter(n => n !== this.get(c, r).number)
         }
+      }
+      if (candidates.length === 1) {
+        cell.number = candidates[0]
+      } else {
+        cell.candidates = candidates
       }
     }
   }
