@@ -6,38 +6,37 @@ import { STEPS } from './models/Solver'
 
 export const App: FC = () => {
   const [render, forceRender] = useState(false)
-  const [gridModel, setGridModel] = useState(GridModel.newFromNotation('....7...1..6.....5......4...9....5..6.81.5..........8731..9....76..2....2..31...9'))
+  const [gridModel, setGridModel] = useState(GridModel.newFromNotation('8.........95.......67.........924768...513492...678135...7519.6...496..3...832...'))
   const [stepByStep, setStepByStep] = useState<[string, GridModel][]>([])
 
   function solve() {
     let remainingStepsWithoutChange = STEPS.length
     let nextStep = 0
-    const stepByStepGrids: [string, GridModel][] = [
-      ['Initial grid', gridModel],
-      ['fillNumberOrCandidatesForAllCells', gridModel.clone().solveWithStep('fillNumberOrCandidatesForAllCells')],
-    ]
+    let cleanedGrid
+    let same
+    const stepByStepGrids: [string, GridModel][] = [['Initial grid', gridModel]]
     while (remainingStepsWithoutChange > 0) {
       const oldGrid = stepByStepGrids[stepByStepGrids.length - 1][1]
-      let newGrid = oldGrid.clone().solveWithStep(STEPS[nextStep])
-      let same = GridModel.colorDiff(oldGrid, newGrid)
+      let newGrid = oldGrid
+      const originalNewGrid = newGrid
+      let wasCleaned = false
+      do {
+        cleanedGrid = newGrid.clone().solveWithStep('fillNumberOrCandidatesForAllCells')
+        same = GridModel.colorDiff(newGrid, cleanedGrid)
+        if (!same) {
+          newGrid = cleanedGrid
+          wasCleaned = true
+        }
+      } while (!same)
+      if (wasCleaned) {
+        GridModel.colorDiff(originalNewGrid, cleanedGrid)
+        stepByStepGrids.push(['fillNumberOrCandidatesForAllCells', cleanedGrid])
+      }
+      newGrid = oldGrid.clone().solveWithStep(STEPS[nextStep])
+      same = GridModel.colorDiff(oldGrid, newGrid)
       remainingStepsWithoutChange = same ? remainingStepsWithoutChange - 1 : STEPS.length
       if (!same) {
         stepByStepGrids.push([STEPS[nextStep], newGrid])
-        const originalNewGrid = newGrid
-        let cleanedGrid
-        let wasCleaned = false
-        do {
-          cleanedGrid = newGrid.clone().solveWithStep('fillNumberOrCandidatesForAllCells')
-          same = GridModel.colorDiff(newGrid, cleanedGrid)
-          if (!same) {
-            newGrid = cleanedGrid
-            wasCleaned = true
-          }
-        } while (!same)
-        if (wasCleaned) {
-          GridModel.colorDiff(originalNewGrid, cleanedGrid)
-          stepByStepGrids.push(['fillNumberOrCandidatesForAllCells', cleanedGrid])
-        }
       }
       nextStep = (nextStep + 1) % STEPS.length
     }

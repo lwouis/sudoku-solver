@@ -4,7 +4,7 @@ import { Solver } from './Solver'
 import { Grid } from './Grid'
 
 export function allPossibleTuples(array: number[]): number[][] {
-  return Array.from({length: 1 << array.length}, (_, i) => array.filter((_, j) => i & 1 << j))
+  return Array.from({length: 1 << array.length}, (_, i) => array.filter((_, j) => (i & 1) << j))
     .filter(n => n.length > 1)
 }
 
@@ -29,9 +29,9 @@ export function setOrInit<K, V>(map: Map<K, V[]>, key: K, value: V) {
 
 export function testAllGridsInFile(): void {
   const notations = readFileSync(path.join(__dirname, `../../dataset/${expect.getState().currentTestName}.txt`), 'utf8').split('\n')
-  const solvedCount = notations.reduce((acc, notation) => {
+  const solvedCount = notations.reduce((acc, notation, i) => {
+    console.log(i, acc, notations.length)
     if (new Solver(Grid.newFromNotation(notation)).solve().checkIfCompleted()) {
-      // console.log(acc, notations.length)
       return acc + 1
     }
     return acc

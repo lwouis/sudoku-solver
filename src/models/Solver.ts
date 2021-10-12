@@ -1,6 +1,4 @@
 import { Grid } from './Grid'
-import { readFileSync } from 'fs'
-import path from 'path'
 
 export class Solver {
   constructor(public grid: Grid) {}
@@ -8,26 +6,35 @@ export class Solver {
   solve(): Grid {
     let remainingStepsWithoutChange = STEPS.length
     let nextStep = 0
-    let newGrid = this.grid.clone().solveWithStep('fillNumberOrCandidatesForAllCells')
-    let oldGrid
+    let cleanedGrid
+    let same
+    let newGrid
+    let oldGrid = this.grid.clone()
     while (remainingStepsWithoutChange > 0) {
-      oldGrid = newGrid
+      newGrid = oldGrid
+      const originalNewGrid = newGrid
+      let wasCleaned = false
+      do {
+        cleanedGrid = newGrid.clone().solveWithStep('fillNumberOrCandidatesForAllCells')
+        same = Grid.colorDiff(newGrid, cleanedGrid)
+        if (!same) {
+          newGrid = cleanedGrid
+          wasCleaned = true
+        }
+      } while (!same)
+      if (wasCleaned) {
+        Grid.colorDiff(originalNewGrid, cleanedGrid)
+        oldGrid = cleanedGrid
+      }
       newGrid = oldGrid.clone().solveWithStep(STEPS[nextStep])
-      let same = Grid.colorDiff(oldGrid, newGrid)
+      same = Grid.colorDiff(oldGrid, newGrid)
       remainingStepsWithoutChange = same ? remainingStepsWithoutChange - 1 : STEPS.length
       if (!same) {
-        let cleanedGrid
-        do {
-          cleanedGrid = newGrid.clone().solveWithStep('fillNumberOrCandidatesForAllCells')
-          same = Grid.colorDiff(newGrid, cleanedGrid)
-          if (!same) {
-            newGrid = cleanedGrid
-          }
-        } while (!same)
+        oldGrid = newGrid
       }
       nextStep = (nextStep + 1) % STEPS.length
     }
-    return newGrid
+    return newGrid as Grid
   }
 }
 
@@ -55,12 +62,3 @@ export const STEPS: SolvingStep[] = [
   // swordfish. Very complex... (https://www.kristanix.com/sudokuepic/sudoku-solving-techniques.php)
   // single chains. A bit bruteforce though... (https://www.sudokuwiki.org/Singles_Chains)
 ]
-
-// const notations = readFileSync(path.join(__dirname, `../../dataset/puzzles2_17_clue.txt`), 'utf8').split('\n')
-// const solvedCount = notations.reduce((acc, notation) => {
-//   if (new Solver(Grid.newFromNotation(notation)).solve().checkIfCompleted()) {
-//     console.log(acc, notations.length)
-//     return acc + 1
-//   }
-//   return acc
-// }, 0)
