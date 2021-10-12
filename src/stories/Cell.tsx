@@ -1,12 +1,6 @@
 import React, { FC } from 'react'
 import styles from './Cell.module.scss'
-
-export interface CellProps {
-  number?: number
-  candidates: number[]
-  isInitial?: boolean
-  isDiff?: boolean
-}
+import { CellProps } from '../models/Grid'
 
 export const Cell: FC<CellProps> = ({number, candidates, isInitial}) => {
   return (

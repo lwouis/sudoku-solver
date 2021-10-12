@@ -1,6 +1,12 @@
-import { CellProps } from '../stories/Cell'
 import { allPossibleTuples, sameArrays, setOrInit } from './Utils'
 import { SolvingStep } from './Solver'
+
+export interface CellProps {
+  number?: number
+  candidates: number[]
+  isInitial?: boolean
+  isDiff?: boolean
+}
 
 export class Grid {
   constructor(public cells: CellProps[]) {}
@@ -33,7 +39,7 @@ export class Grid {
   }
 
   static newFromNotation(notation: string): Grid {
-    notation = notation.replaceAll('\n', '')
+    notation = notation.replace(/\n/g, '')
     return new Grid(notation.split('').map(c => ({
       number: c === '.' ? undefined : Number(c),
       candidates: [],
@@ -124,11 +130,11 @@ export class Grid {
             }
           }
         }
-        for (const [k, v] of occurrences.entries()) {
+        occurrences.forEach((v, k) => {
           if (v.length === 1 && v[0].number === undefined) {
             v[0].number = k
           }
-        }
+        })
       }
     }
   }
@@ -155,16 +161,16 @@ export class Grid {
             setOrInit(fullTuplesMap, candidates.join(''), cell)
           }
         }
-        for (const [k, cells] of fullTuplesMap.entries()) {
+        fullTuplesMap.forEach((cells, k) => {
           if (k.length > 1 && k.length === cells.length) {
             this.removeCandidates(k, allCells, cells)
           }
-        }
-        for (const [k, cells] of partialTuplesMap.entries()) {
+        })
+        partialTuplesMap.forEach((cells, k) => {
           if (k.length === cells.length && k.split('').every(candidate => sameArrays(candidatesMap.get(Number(candidate)), cells))) {
             this.removeCandidates(k, allCells, cells)
           }
-        }
+        })
       }
     }
   }
@@ -185,7 +191,7 @@ export class Grid {
       }
       const tuples: [Map<number, number[]>, string][] = [[candidatesColumns, 'col'], [candidatesRows, 'row']]
       tuples.forEach(([map, type], t) => {
-        for (const [candidate, lines] of map.entries()) {
+        map.forEach((lines, candidate) => {
           if (new Set(lines).size === 1) {
             const otherMap = new Set(tuples[t === 0 ? 1 : 0][0].get(candidate))
             if (otherMap && otherMap.size > 1) {
@@ -200,7 +206,7 @@ export class Grid {
               }
             }
           }
-        }
+        })
       })
     }
   }

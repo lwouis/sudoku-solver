@@ -1,8 +1,8 @@
 import React, { FC, useEffect, useState } from 'react'
 import styles from './Grid.module.scss'
-import { Cell, CellProps } from './Cell'
+import { Cell } from './Cell'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { Grid as GridModel } from '../models/Grid'
+import { CellProps, Grid as GridModel } from '../models/Grid'
 
 interface GridProps {
   gridModel: GridModel

@@ -1,4 +1,6 @@
 import { Grid } from './Grid'
+import { readFileSync } from 'fs'
+import path from 'path'
 
 export class Solver {
   constructor(public grid: Grid) {}
@@ -53,3 +55,12 @@ export const STEPS: SolvingStep[] = [
   // swordfish. Very complex... (https://www.kristanix.com/sudokuepic/sudoku-solving-techniques.php)
   // single chains. A bit bruteforce though... (https://www.sudokuwiki.org/Singles_Chains)
 ]
+
+// const notations = readFileSync(path.join(__dirname, `../../dataset/puzzles2_17_clue.txt`), 'utf8').split('\n')
+// const solvedCount = notations.reduce((acc, notation) => {
+//   if (new Solver(Grid.newFromNotation(notation)).solve().checkIfCompleted()) {
+//     console.log(acc, notations.length)
+//     return acc + 1
+//   }
+//   return acc
+// }, 0)
