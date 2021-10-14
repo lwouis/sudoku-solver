@@ -8,8 +8,8 @@ export class Solver {
     let nextStep = 0
     let cleanedGrid
     let same
-    let newGrid
     let oldGrid = this.grid.clone()
+    let newGrid = oldGrid
     while (remainingStepsWithoutChange > 0) {
       newGrid = oldGrid
       const originalNewGrid = newGrid
@@ -34,7 +34,43 @@ export class Solver {
       }
       nextStep = (nextStep + 1) % STEPS.length
     }
-    return newGrid as Grid
+    if (newGrid.isCompleted()) {
+      return newGrid
+    }
+    return this.solveWithBacktracking(newGrid) as Grid
+  }
+
+  solveWithBacktracking(grid: Grid): Grid | undefined {
+    if (grid.isCompleted()) {
+      if (grid.isCompletedAndValid()) {
+        return grid
+      }
+      return undefined
+    }
+    let emptyCells
+    let changed
+    do {
+      changed = false
+      emptyCells = grid.emptyCells()
+      for (const cell of emptyCells) {
+        const [col, row] = Grid.colRow(cell[1])
+        changed = grid.fillNumberOrCandidatesForCell(col, row)
+        if (cell[0].candidates.length === 0) {
+          return undefined
+        }
+      }
+    } while (changed)
+    if (emptyCells.length === 0) {
+      return grid
+    }
+    for (const candidate of emptyCells[0][0].candidates) {
+      emptyCells[0][0].number = candidate
+      const res = this.solveWithBacktracking(grid.clone())
+      if (res !== undefined) {
+        return res
+      }
+    }
+    return undefined
   }
 }
 
@@ -54,7 +90,12 @@ export const STEPS: SolvingStep[] = [
   // pointing pairs/triples (https://www.sudokuwiki.org/PuzImages/PP1.png)
   'alignedCandidatesInBoxRemoveCandidatesOnLine',
 
-  // great documentation on techniques: https://www.sudokuwiki.org/Strategy_Families
+  // great documentation on techniques:
+  //   * https://www.sudokuwiki.org/Strategy_Families
+  //   * https://www.sudopedia.org/wiki/Solving_Technique
+
+  // solve any sudoku: https://dancing-links.herokuapp.com/
+
   // box line reduction (https://www.sudokuwiki.org/PuzImages/BLR1.png)
   // double pointing pairs (https://www.kristanix.com/sudokuepic/4blockblock.png)
   // x-wing (https://www.kristanix.com/sudokuepic/7xwing.png)

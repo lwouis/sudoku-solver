@@ -48,8 +48,7 @@ export const Grid: FC<GridProps> = ({gridModel}) => {
   return (
     <div className={styles.root}>
       {gridModel$.cells.map((c, i) => {
-        const col = i % 9 + 1
-        const row = Math.floor(i / 9 + 1)
+        const [col, row] = GridModel.colRow(i)
         return (
           <div
             key={i}

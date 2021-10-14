@@ -19,7 +19,11 @@ export class Grid {
     return this.cells.map(x => x.number !== undefined ? x.number : '.').join('')
   }
 
-  checkIfCompleted(): boolean {
+  isCompleted(): boolean {
+    return this.cells.every(c => c.number !== undefined)
+  }
+
+  isCompletedAndValid(): boolean {
     for (const type of ['row', 'col', 'box']) {
       for (let i = 1; i <= 9; i++) {
         const numbers = new Set<number>()
@@ -36,6 +40,15 @@ export class Grid {
       }
     }
     return true
+  }
+
+  emptyCells(): [CellProps, number][] {
+    return this.cells
+      .reduce((acc, c, i) => {
+        c.candidates = c.candidates.sort((a, b) => a - b)
+        return c.number === undefined ? [...acc, [c, i]] as [CellProps, number][] : acc
+      }, [] as [CellProps, number][])
+      .sort((a, b) => a[0].candidates.length - b[0].candidates.length)
   }
 
   static newFromNotation(notation: string): Grid {
@@ -57,6 +70,10 @@ export class Grid {
       }
     })
     return same
+  }
+
+  static colRow(i: number): [number, number] {
+    return [i % 9 + 1, Math.floor(i / 9 + 1)]
   }
 
   setNumber(col: number, row: number, number: number): Grid {
@@ -89,7 +106,7 @@ export class Grid {
     }
   }
 
-  fillNumberOrCandidatesForCell(col: number, row: number): void {
+  fillNumberOrCandidatesForCell(col: number, row: number): boolean {
     const cell = this.get(col, row)
     if (cell.number === undefined) {
       let candidates = cell.candidates.length > 0 ? cell.candidates : Array.from({length: 9}, (_, i) => i + 1)
@@ -108,10 +125,13 @@ export class Grid {
       }
       if (candidates.length === 1) {
         cell.number = candidates[0]
-      } else {
-        cell.candidates = candidates
+        return true
       }
+      let different = cell.candidates.length !== candidates.length || !cell.candidates.every(c => candidates.includes(c))
+      cell.candidates = candidates
+      return different
     }
+    return false
   }
 
   singleCandidateForNumberInGroup() {
