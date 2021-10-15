@@ -27,12 +27,16 @@ export function setOrInit<K, V>(map: Map<K, V[]>, key: K, value: V) {
   }
 }
 
-export function testAllGridsInFile(): void {
-  const notations = readFileSync(path.join(__dirname, `../../dataset/${expect.getState().currentTestName}.txt`), 'utf8').split('\n')
+export function testAllGridsInFile(checkSolution = true): void {
+  const notations = readFileSync(path.join(__dirname, `../../dataset/${expect.getState().currentTestName}.txt`), 'utf8').trimEnd().split('\n')
   const solvedCount = notations.reduce((acc, notation, i) => {
     console.log(i, acc, notations.length)
     const solved = new Solver(Grid.newFromNotation(notation)).solve()
-    if (solved!.isCompletedAndValid()) {
+    if (checkSolution) {
+      if (solved!.isCompletedAndValid()) {
+        return acc + 1
+      }
+    } else if (solved === undefined) {
       return acc + 1
     }
     return acc
