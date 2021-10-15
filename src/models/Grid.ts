@@ -106,7 +106,7 @@ export class Grid {
     }
   }
 
-  fillNumberOrCandidatesForCell(col: number, row: number): boolean {
+  fillNumberOrCandidatesForCell(col: number, row: number): void {
     const cell = this.get(col, row)
     if (cell.number === undefined) {
       let candidates = cell.candidates.length > 0 ? cell.candidates : Array.from({length: 9}, (_, i) => i + 1)
@@ -125,9 +125,48 @@ export class Grid {
       }
       if (candidates.length === 1) {
         cell.number = candidates[0]
+      }
+      cell.candidates = candidates
+    }
+  }
+
+  fillNumberOrCandidatesImpactedByCell(col: number, row: number): boolean {
+    const newNumber = this.get(col, row).number
+    let anyChange = false
+    if (newNumber !== undefined) {
+      for (let c = 1; c <= 9; c++) {
+        if (this.removeCandidateFromCell(c, row, newNumber)) {
+          anyChange = true
+        }
+      }
+      for (let r = 1; r <= 9; r++) {
+        if (this.removeCandidateFromCell(col, r, newNumber)) {
+          anyChange = true
+        }
+      }
+      const boxFirstCol = Math.ceil(col / 3) * 3 - 2
+      const boxFirstRow = Math.ceil(row / 3) * 3 - 2
+      for (let r = boxFirstRow; r <= boxFirstRow + 2; r++) {
+        for (let c = boxFirstCol; c <= boxFirstCol + 2; c++) {
+          if (this.removeCandidateFromCell(c, r, newNumber)) {
+            anyChange = true
+          }
+        }
+      }
+    }
+    return anyChange
+  }
+
+  removeCandidateFromCell(col: number, row: number, candidate: number): boolean {
+    const cell = this.get(col, row)
+    if (cell.number === undefined) {
+      const candidates = cell.candidates.filter(c => c !== candidate)
+      if (candidates.length === 1) {
+        cell.number = candidates[0]
+        this.fillNumberOrCandidatesImpactedByCell(col, row)
         return true
       }
-      let different = cell.candidates.length !== candidates.length || !cell.candidates.every(c => candidates.includes(c))
+      const different = cell.candidates.length !== candidates.length || !candidates.every((c) => cell.candidates.includes(c))
       cell.candidates = candidates
       return different
     }
@@ -263,5 +302,27 @@ export class Grid {
 
   get(col: number, row: number): CellProps {
     return this.cells[(col - 1) + (row - 1) * 9]
+  }
+
+  isValid(candidatesAreSet?: boolean) {
+    if (candidatesAreSet && this.cells.some(c => c.number === undefined && c.candidates.length === 0)) {
+      return false
+    }
+    for (const type of ['row', 'col', 'box']) {
+      for (let i = 1; i <= 9; i++) {
+        const numbersMap = new Map<number, number>(Array.from({length: 9}, (_, i) => [i + 1, 0]))
+        for (let j = 1; j <= 9; j++) {
+          const colRow = Grid.colRowForType(type, j, i)
+          const cell = this.get(colRow[0], colRow[1])
+          if (cell.number !== undefined) {
+            numbersMap.set(cell.number, numbersMap.get(cell.number)! + 1)
+          }
+        }
+        if (Array.from(numbersMap.values()).some(count => count > 1)) {
+          return false
+        }
+      }
+    }
+    return true
   }
 }

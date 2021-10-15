@@ -31,7 +31,8 @@ export function testAllGridsInFile(): void {
   const notations = readFileSync(path.join(__dirname, `../../dataset/${expect.getState().currentTestName}.txt`), 'utf8').split('\n')
   const solvedCount = notations.reduce((acc, notation, i) => {
     console.log(i, acc, notations.length)
-    if (new Solver(Grid.newFromNotation(notation)).solve().isCompletedAndValid()) {
+    const solved = new Solver(Grid.newFromNotation(notation)).solve()
+    if (solved!.isCompletedAndValid()) {
       return acc + 1
     }
     return acc

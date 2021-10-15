@@ -3,7 +3,10 @@ import { Grid } from './Grid'
 export class Solver {
   constructor(public grid: Grid) {}
 
-  solve(): Grid {
+  solve(): Grid | undefined {
+    if (!this.grid.isValid()) {
+      return undefined
+    }
     let remainingStepsWithoutChange = STEPS.length
     let nextStep = 0
     let cleanedGrid
@@ -16,6 +19,9 @@ export class Solver {
       let wasCleaned = false
       do {
         cleanedGrid = newGrid.clone().solveWithStep('fillNumberOrCandidatesForAllCells')
+        if (!cleanedGrid.isValid(true)) {
+          return undefined
+        }
         same = Grid.colorDiff(newGrid, cleanedGrid)
         if (!same) {
           newGrid = cleanedGrid
@@ -27,6 +33,9 @@ export class Solver {
         oldGrid = cleanedGrid
       }
       newGrid = oldGrid.clone().solveWithStep(STEPS[nextStep])
+      if (!newGrid.isValid(true)) {
+        return undefined
+      }
       same = Grid.colorDiff(oldGrid, newGrid)
       remainingStepsWithoutChange = same ? remainingStepsWithoutChange - 1 : STEPS.length
       if (!same) {
@@ -37,7 +46,7 @@ export class Solver {
     if (newGrid.isCompleted()) {
       return newGrid
     }
-    return this.solveWithBacktracking(newGrid) as Grid
+    return this.solveWithBacktracking(newGrid)
   }
 
   solveWithBacktracking(grid: Grid): Grid | undefined {
@@ -47,25 +56,17 @@ export class Solver {
       }
       return undefined
     }
-    let emptyCells
-    let changed
-    do {
-      changed = false
-      emptyCells = grid.emptyCells()
-      for (const cell of emptyCells) {
-        const [col, row] = Grid.colRow(cell[1])
-        changed = grid.fillNumberOrCandidatesForCell(col, row)
-        if (cell[0].candidates.length === 0) {
-          return undefined
-        }
-      }
-    } while (changed)
-    if (emptyCells.length === 0) {
-      return grid
-    }
-    for (const candidate of emptyCells[0][0].candidates) {
-      emptyCells[0][0].number = candidate
-      const res = this.solveWithBacktracking(grid.clone())
+    const firstEmptyCell = grid.emptyCells()[0]
+    const candidates = firstEmptyCell[0].candidates.map(c => c)
+    for (const candidate of candidates) {
+      const gridClone = grid.clone()
+      gridClone.cells[firstEmptyCell[1]].number = candidate
+      const [col, row] = Grid.colRow(firstEmptyCell[1])
+      let changed = false
+      do {
+        changed = gridClone.fillNumberOrCandidatesImpactedByCell(col, row)
+      } while (changed)
+      const res = this.solveWithBacktracking(gridClone)
       if (res !== undefined) {
         return res
       }
