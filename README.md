@@ -9,4 +9,13 @@ This is a [Create React App](https://create-react-app.dev/) project. You need to
 * Download dependencies by running `npm install`
 * Run the web app by running `npm start`
 
-Optionally, you can play around with the unit tests and datasets bundled with the project by running `npm test`. I also used Storybook.js to develop the UI, so you can play with that by running `npm run storybook`
+# Solver correctness (i.e. datasets, unit tests, etc)
+
+You can play around with the unit tests and datasets bundled with the project by:
+
+* Decompressing the dataset files: `unzip dataset.zip` (~140MB compressed / ~610MB uncompressed)
+* Run unit tests with `npm test`
+
+# Developping the UI
+
+I used Storybook.js to develop the UI, so you can play with that by running `npm run storybook`
