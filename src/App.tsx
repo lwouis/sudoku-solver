@@ -1,6 +1,6 @@
 import React, {FC, useEffect, useState} from 'react'
 import {Grid} from './stories/Grid'
-import {Grid as GridModel} from './models/Grid'
+import {Grid as GridModel, GRIDS} from './models/Grid'
 import styles from './App.module.scss'
 import {STEPS} from './models/Solver'
 import {useLocation} from "react-router-dom";
@@ -32,7 +32,7 @@ export const App: FC = () => {
         if (gridNotationRegex.test(initialHash)) {
             return initialHash
         }
-        return '8.........95.......67.........924768...513492...678135...7519.6...496..3...832...'
+        return GRIDS['easy'][Math.floor(Math.random() * GRIDS['easy'].length)]
     }
 
     function reset() {
@@ -43,6 +43,11 @@ export const App: FC = () => {
             window.location.hash = ""
             window.location.reload()
         }
+    }
+
+    function generateGrid(difficulty: keyof typeof GRIDS) {
+        const newGrid = GRIDS[difficulty][Math.floor(Math.random() * GRIDS[difficulty].length)]
+        window.location.replace('#' + newGrid)
     }
 
     function solve() {
@@ -92,28 +97,54 @@ export const App: FC = () => {
     return (
         <div className={styles.root}>
             <div className={styles.left}>
-                <label style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px'}}>Grid in
-                    textual notation:
-                    <input type="text" maxLength={81} pattern="[0-9\.]+" value={gridInNotation}
-                           onChange={e => {
-                               window.location.replace('#' + e.currentTarget.value)
-                               setGridInNotation(e.currentTarget.value);
-                           }} style={{width: '81ch', fontFamily: 'monospace'}}/>
+                <label>
+                    <strong>Generate a grid</strong>
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                        <button type={'button'} onClick={() => generateGrid('easy')}>Easy</button>
+                        <button type={'button'} onClick={() => generateGrid('medium')}>Medium</button>
+                        <button type={'button'} onClick={() => generateGrid('hard')}>Hard</button>
+                        <button type={'button'} onClick={() => generateGrid('expert')}>Expert</button>
+                    </div>
+                </label>
+                <label>
+                    <strong>Customize or paste grid</strong>
+                    <textarea maxLength={81} value={gridInNotation}
+                              onChange={e => {
+                                  window.location.replace('#' + e.currentTarget.value)
+                                  setGridInNotation(e.currentTarget.value);
+                              }}/>
                     {!gridIsValid && <span style={{color: 'red'}}>This grid is invalid</span>}
                 </label>
-                <Grid gridModel={gridModel}/>
-                <button type={'button'} onClick={() => solve()} disabled={!gridIsValid}>Solve</button>
-                <button type={'button'} onClick={() => reset()}>Reset</button>
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px'}}>
+                    <label>
+                        <strong>Controls</strong>
+                        <ul style={{margin: 0, padding: '0', listStylePosition: 'inside'}}>
+                            <li>Mouse hover over a cell</li>
+                            <li>Press a number to set it on that cell</li>
+                            <li>Press shift+number to set it as candidate on that cell</li>
+                        </ul>
+                    </label>
+                </div>
             </div>
-            {gridIsValid && <div className={styles.right}>
-                {stepByStep?.map(([step, g], i) => (
-                    <div key={i} style={{zoom: 0.7, marginBottom: '20px'}}>
+            <div className={styles.center}>
+                <Grid gridModel={gridModel}/>
+            </div>
+            <div className={styles.right}>
+                <label>
+                    <strong>Solve the grid</strong>
+                    <div style={{display: 'flex', gap: '20px'}}>
+                        <button type={'button'} onClick={() => solve()} disabled={!gridIsValid}>Solve</button>
+                        <button type={'button'} onClick={() => reset()}>Reset</button>
+                    </div>
+                </label>
+                {gridIsValid && stepByStep.length > 0 && stepByStep?.map(([step, g], i) => (
+                    <div key={i} style={{zoom: 0.7, display: 'flex', flexDirection: 'column', gap: '5px'}}>
                         <strong
                             style={{textTransform: 'capitalize'}}>{i}. {step.replace(/([a-z0-9])([A-Z])/g, '$1 $2')}</strong>
                         <Grid gridModel={g}/>
                     </div>
                 ))}
-            </div>}
+            </div>
         </div>
     )
 }

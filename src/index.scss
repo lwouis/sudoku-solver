@@ -1,3 +1,18 @@
 html, body {
   margin: 0;
 }
+
+label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+textarea {
+  width: 9ch;
+  height: 140px;
+  overflow: hidden;
+  font-family: monospace;
+  resize: none;
+}

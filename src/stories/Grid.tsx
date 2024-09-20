@@ -42,7 +42,7 @@ export const Grid: FC<GridProps> = ({gridModel}) => {
     if (cell.isDiff) {
       return '#FFFDD4'
     }
-    return 'transparent'
+    return 'white'
   }
 
   return (
