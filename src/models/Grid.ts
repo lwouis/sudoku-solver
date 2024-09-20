@@ -340,7 +340,7 @@ export class Grid {
         for (let j = 1; j <= 9; j++) {
           const colRow = Grid.colRowForType(type, j, i)
           const cell = this.get(colRow[0], colRow[1])
-          if (cell.number !== undefined) {
+          if (cell?.number !== undefined) {
             numbersMap.set(cell.number, numbersMap.get(cell.number)! + 1)
           }
         }
