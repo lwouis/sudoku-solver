@@ -18,7 +18,7 @@ export class Solver {
       const originalNewGrid = newGrid
       let wasCleaned = false
       do {
-        cleanedGrid = newGrid.clone().solveWithStep('fillNumberOrCandidatesForAllCells')
+        cleanedGrid = newGrid.solveWithStep('fillNumberOrCandidatesForAllCells')
         if (!cleanedGrid.isValid(true)) {
           return undefined
         }
@@ -32,7 +32,7 @@ export class Solver {
         Grid.colorDiff(originalNewGrid, cleanedGrid)
         oldGrid = cleanedGrid
       }
-      newGrid = oldGrid.clone().solveWithStep(STEPS[nextStep])
+      newGrid = oldGrid.solveWithStep(STEPS[nextStep])
       if (!newGrid.isValid(true)) {
         return undefined
       }

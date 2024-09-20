@@ -79,7 +79,7 @@ export class Grid {
   setNumber(col: number, row: number, number: number): Grid {
     const cell = this.get(col, row)
     cell.number = number
-    return this
+    return this.clone()
   }
 
   toggleCandidate(col: number, row: number, candidate: number): Grid {
@@ -88,14 +88,14 @@ export class Grid {
     if (cell.candidates.includes(candidate)) {
       cell.candidates = cell.candidates.filter(c => c !== candidate)
     } else {
-      cell.candidates.push(candidate)
+      cell.candidates = [...cell.candidates, candidate]
     }
-    return this
+    return this.clone()
   }
 
   solveWithStep(step: SolvingStep): Grid {
     this[step]()
-    return this
+    return this.clone()
   }
 
   fillNumberOrCandidatesForAllCells(): void {

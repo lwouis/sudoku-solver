@@ -21,7 +21,7 @@ export const App: FC = () => {
       const originalNewGrid = newGrid
       let wasCleaned = false
       do {
-        cleanedGrid = newGrid.clone().solveWithStep('fillNumberOrCandidatesForAllCells')
+        cleanedGrid = newGrid.solveWithStep('fillNumberOrCandidatesForAllCells')
         same = GridModel.colorDiff(newGrid, cleanedGrid)
         if (!same) {
           newGrid = cleanedGrid
@@ -32,7 +32,7 @@ export const App: FC = () => {
         GridModel.colorDiff(originalNewGrid, cleanedGrid)
         stepByStepGrids.push(['fillNumberOrCandidatesForAllCells', cleanedGrid])
       }
-      newGrid = oldGrid.clone().solveWithStep(STEPS[nextStep])
+      newGrid = oldGrid.solveWithStep(STEPS[nextStep])
       same = GridModel.colorDiff(oldGrid, newGrid)
       remainingStepsWithoutChange = same ? remainingStepsWithoutChange - 1 : STEPS.length
       if (!same) {
