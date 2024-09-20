@@ -46,32 +46,7 @@ export class Solver {
     if (newGrid.isCompleted()) {
       return newGrid
     }
-    return this.solveWithBacktracking(newGrid)
-  }
-
-  solveWithBacktracking(grid: Grid): Grid | undefined {
-    if (grid.isCompleted()) {
-      if (grid.isCompletedAndValid()) {
-        return grid
-      }
-      return undefined
-    }
-    const firstEmptyCell = grid.emptyCells()[0]
-    const candidates = firstEmptyCell[0].candidates.map(c => c)
-    for (const candidate of candidates) {
-      const gridClone = grid.clone()
-      gridClone.cells[firstEmptyCell[1]].number = candidate
-      const [col, row] = Grid.colRow(firstEmptyCell[1])
-      let changed = false
-      do {
-        changed = gridClone.fillNumberOrCandidatesImpactedByCell(col, row)
-      } while (changed)
-      const res = this.solveWithBacktracking(gridClone)
-      if (res !== undefined) {
-        return res
-      }
-    }
-    return undefined
+    return newGrid.backtracking()
   }
 }
 
@@ -80,6 +55,7 @@ export type SolvingStep =
   | 'singleCandidateForNumberInGroup'
   | 'candidatesTuplesRemoveOtherCandidates'
   | 'alignedCandidatesInBoxRemoveCandidatesOnLine'
+  | 'backtracking'
 
 export const STEPS: SolvingStep[] = [
   // for each line, if a candidate is the only one of its number, it is filled in

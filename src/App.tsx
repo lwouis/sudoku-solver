@@ -15,9 +15,11 @@ export const App: FC = () => {
     let cleanedGrid
     let same
     const stepByStepGrids: [string, GridModel][] = [['Initial grid', gridModel]]
+    let oldGrid = stepByStepGrids[stepByStepGrids.length - 1][1]
+    let newGrid = oldGrid
     while (remainingStepsWithoutChange > 0) {
-      const oldGrid = stepByStepGrids[stepByStepGrids.length - 1][1]
-      let newGrid = oldGrid
+      oldGrid = stepByStepGrids[stepByStepGrids.length - 1][1]
+      newGrid = oldGrid
       const originalNewGrid = newGrid
       let wasCleaned = false
       do {
@@ -39,6 +41,12 @@ export const App: FC = () => {
         stepByStepGrids.push([STEPS[nextStep], newGrid])
       }
       nextStep = (nextStep + 1) % STEPS.length
+    }
+    if (!newGrid.isCompleted()) {
+      const solvedGrid = newGrid.backtracking()
+      if (solvedGrid) {
+        stepByStepGrids.push(['backtracking', solvedGrid])
+      }
     }
     setStepByStep([...stepByStepGrids])
     setGridModel(stepByStepGrids[stepByStepGrids.length - 1][1])

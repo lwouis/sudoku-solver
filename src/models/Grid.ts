@@ -93,9 +93,35 @@ export class Grid {
     return this.clone()
   }
 
+  backtracking(): Grid | undefined {
+    if (this.isCompleted()) {
+      if (this.isCompletedAndValid()) {
+        return this
+      }
+      return undefined
+    }
+    const firstEmptyCell = this.emptyCells()[0]
+    const candidates = firstEmptyCell[0].candidates.map(c => c)
+    for (const candidate of candidates) {
+      const gridClone = this.clone()
+      gridClone.cells[firstEmptyCell[1]].number = candidate
+      const [col, row] = Grid.colRow(firstEmptyCell[1])
+      let changed = false
+      do {
+        changed = gridClone.fillNumberOrCandidatesImpactedByCell(col, row)
+      } while (changed)
+      const res = gridClone.backtracking()
+      if (res !== undefined) {
+        return res
+      }
+    }
+    return undefined
+  }
+
   solveWithStep(step: SolvingStep): Grid {
-    this[step]()
-    return this.clone()
+    const clone = this.clone()
+    clone[step]()
+    return clone
   }
 
   fillNumberOrCandidatesForAllCells(): void {
