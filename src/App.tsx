@@ -139,13 +139,19 @@ export const App: FC = () => {
                         <button type={'button'} onClick={() => reset()}>Reset</button>
                     </div>
                 </section>
-                {gridIsValid && stepByStep.length > 0 && stepByStep?.map(([step, g], i) => (
-                    <div key={i} style={{zoom: 0.7, display: 'flex', flexDirection: 'column', gap: '5px'}}>
-                        <strong
-                            style={{textTransform: 'capitalize'}}>{i}. {step.replace(/([a-z0-9])([A-Z])/g, '$1 $2')}</strong>
-                        <Grid gridModel={g}/>
-                    </div>
-                ))}
+                <div style={{overflow: 'auto', padding: '0 10px'}}>
+                    {gridIsValid && stepByStep.length > 0 && stepByStep?.map(([step, g], i) => (
+                        <div key={i} style={{zoom: 0.7, display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                            <strong
+                                style={{textTransform: 'capitalize'}}>{i}. {step.replace(/([a-z0-9])([A-Z])/g, '$1 $2')}</strong>
+                            <Grid gridModel={g}/>
+                        </div>
+                    ))}
+                </div>
+                {/* reserves the width of the section, so it doesn't jump on `solve` */}
+                <div style={{zoom: 0.7, height: 0, visibility: 'hidden'}}>
+                    <Grid gridModel={gridModel}/>
+                </div>
             </div>
         </div>
     )
