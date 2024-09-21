@@ -94,6 +94,13 @@ export class Grid {
         return this.clone()
     }
 
+    clearCell(col: number, row: number): Grid {
+        const cell = this.get(col, row)
+        cell.number = undefined
+        cell.candidates = []
+        return this.clone()
+    }
+
     backtracking(): Grid | undefined {
         if (this.isCompleted()) {
             if (this.isCompletedAndValid()) {

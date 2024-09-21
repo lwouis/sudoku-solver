@@ -5,8 +5,9 @@ import styles from './App.module.scss'
 import {STEPS} from './models/Solver'
 import {useLocation} from "react-router-dom";
 
+const gridNotationRegex = /^[1-9.]{81}$/;
+
 export const App: FC = () => {
-    const gridNotationRegex = /^[1-9.]{81}$/;
     const [initialHash] = useState(window.location.hash.substring(1)) // remove # at the beginning
     const initialGridFromHashOrDefault = initialGrid(initialHash)
     const [gridInNotation, setGridInNotation] = useState(initialGridFromHashOrDefault)
@@ -97,7 +98,7 @@ export const App: FC = () => {
     return (
         <div className={styles.root}>
             <div className={styles.left}>
-                <label>
+                <section>
                     <strong>Generate a grid</strong>
                     <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                         <button type={'button'} onClick={() => generateGrid('easy')}>Easy</button>
@@ -105,8 +106,8 @@ export const App: FC = () => {
                         <button type={'button'} onClick={() => generateGrid('hard')}>Hard</button>
                         <button type={'button'} onClick={() => generateGrid('expert')}>Expert</button>
                     </div>
-                </label>
-                <label>
+                </section>
+                <section>
                     <strong>Customize or paste grid</strong>
                     <textarea maxLength={81} value={gridInNotation}
                               onChange={e => {
@@ -114,29 +115,30 @@ export const App: FC = () => {
                                   setGridInNotation(e.currentTarget.value);
                               }}/>
                     {!gridIsValid && <span style={{color: 'red'}}>This grid is invalid</span>}
-                </label>
+                </section>
                 <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px'}}>
-                    <label>
+                    <section>
                         <strong>Controls</strong>
                         <ul style={{margin: 0, padding: '0', listStylePosition: 'inside'}}>
                             <li>Mouse hover over a cell</li>
                             <li>Press a number to set it on that cell</li>
                             <li>Press shift+number to set it as candidate on that cell</li>
+                            <li>Press backspace or delete to clear a cell</li>
                         </ul>
-                    </label>
+                    </section>
                 </div>
             </div>
             <div className={styles.center}>
                 <Grid gridModel={gridModel}/>
             </div>
             <div className={styles.right}>
-                <label>
+                <section>
                     <strong>Solve the grid</strong>
                     <div style={{display: 'flex', gap: '20px'}}>
                         <button type={'button'} onClick={() => solve()} disabled={!gridIsValid}>Solve</button>
                         <button type={'button'} onClick={() => reset()}>Reset</button>
                     </div>
-                </label>
+                </section>
                 {gridIsValid && stepByStep.length > 0 && stepByStep?.map(([step, g], i) => (
                     <div key={i} style={{zoom: 0.7, display: 'flex', flexDirection: 'column', gap: '5px'}}>
                         <strong
